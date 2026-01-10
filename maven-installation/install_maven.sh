@@ -40,7 +40,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64  # Update this path if it's 
 export M2_HOME=/opt/maven
 export MAVEN_HOME=/opt/maven
 export PATH=\${JAVA_HOME}/bin:\${M2_HOME}/bin:\${PATH} 
-#EOL'
+EOL'
 
 # Make the script executable
 echo "Making the Maven configuration script executable..."
