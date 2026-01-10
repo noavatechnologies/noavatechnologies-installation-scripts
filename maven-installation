@@ -1,0 +1,75 @@
+HOWTOINSTALL MAVENONUBUNTU-AWS
+
+a. Create an ec2 instance
+- First we create a key pair. key pairs allow us to ssh/login into the instance.
+- The keypair is then download to your download folder on your computer
+- Creating the ec2 instance
+
+b. Connect to the instance and install apache maven
+To connect your aws ec2 instances, you need the following parameters:
+- The keypair: my keypair is prof.pem
+- The server: ubuntu
+- Ip or dns of the server
+- Open an ssh client- most preferably- git bash
+- Server url: ssh-i "prof.pem" ubuntu@ec2-99-79-7-165.ca-central-1.compute.amazonaws.com 
+
+c. How to connect to the instance
+- Open git bash
+d. Change directory to Downloads
+- cd  Downloads
+e. Copy and paste the example link from aws cloud 
+- ssh-i "prof.pem" ubuntu@ec2-99-79-7-165.ca-central-1.compute.amazonaws.com 
+
+  Install apache maven
+HOW TO INSTALL MAVEN ON UBUNTU - AWS
+
+f. Update the system
+- sudo apt update
+g. Install java
+- sudo apt install default-jdk
+h. Verify Java Installation
+- java  --version
+i. Change directory to the opt directory
+- cd  /opt
+j. Download maven 3.9.12 from the apache maven website
+- sudo wget https://dlcdn.apache.org/maven/maven-3/3.9.12/binaries/apache-maven-3.9.12-bin.tar.gz
+k. Extract the Maven package
+- sudo tar xf apache-maven-3.9.12-bin.tar.gz
+l. Rename and create a soft link
+- sudo ln -s /opt/apache-maven-3.9.12 /opt/maven
+m. Remove the Apache Maven tar file
+- sudo rm -rf apache-maven-3.9.12-bin.tar.gz
+n. Perform Maven configuration
+- sudo vi /etc/profile.d/maven.sh
+o. Paste the following lines in maven.sh:
+
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64  # Update this path if it's different
+export M2_HOME=/opt/maven
+export MAVEN_HOME=/opt/maven
+export PATH=${JAVA_HOME}/bin:${M2_HOME}/bin:${PATH}
+
+p. Make the script executable
+- sudo chmod +x /etc/profile.d/maven.sh
+q. Load the environment variables
+- source /etc/profile.d/maven.sh
+r. Verify Maven installation
+- mvn --version
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
