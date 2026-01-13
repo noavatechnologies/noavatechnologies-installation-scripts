@@ -29,3 +29,65 @@ sh sonar.sh status
 # por: 9000
 # connect and login to sonarqube with   ip:9000
 
+
+
+
+
+
+
+UPDATE   UPDATE
+After the running the script follow this process to start your sonarqube:
+
+Correct Way to Start SonarQube (With Non-Login User)
+
+Instead of switching users, do:
+
+- run this command below:
+sudo -u sonar /opt/sonarqube/bin/linux-x86-64/sonar.sh start
+
+
+If You REALLY Want to Log in as sonar (Lab Only)
+For learning or debugging only:
+- run this command below
+sudo usermod -s /bin/bash sonar
+sudo su - sonar
+- After that, your prompt will change to:
+- run this:
+cd   /opt/sonarqube/bin/linux-x86-64/
+- then run this to start sonarqube
+sh sonar.sh start
+- run this to check is it started successfully
+sh sonar.sh status
+
+
+note:
+Go to aws sonarqube instance security group and add the sonarqube 
+port: 9000
+connect and login to sonarqube with   ip:9000
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
