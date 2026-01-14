@@ -1,0 +1,218 @@
+APACHE TOMCAT 9 – STEP-BY-STEP INSTALLATION GUIDE
+
+Purpose: Java Application Server
+Server: Same server as Maven and SonarQube
+OS: Ubuntu 22.04
+Java: Already installed (Java 17 / 21)
+Tomcat Version: 9.0.85 (stable, archive)
+
+STEP 1: UPDATE SYSTEM PACKAGES
+  sudo apt update -y
+
+STEP 2: VERIFY JAVA (DO NOT INSTALL AGAIN)
+  java -version
+
+STEP 3: MOVE TO /OPT DIRECTORY
+  cd /opt
+
+STEP 4: DOWNLOAD TOMCAT 9 (ARCHIVE – RELIABLE)
+  sudo wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.85/bin/apache-tomcat-9.0.85.tar.gz
+
+STEP 5: EXTRACT TOMCAT
+   sudo tar -xvf apache-tomcat-9.0.85.tar.gz
+
+STEP 6: REMOVE TAR FILE
+  sudo rm apache-tomcat-9.0.85.tar.gz
+
+STEP 7: RENAME TOMCAT DIRECTORY
+  sudo mv apache-tomcat-9.0.85 tomcat
+
+STEP 8: FIX OWNERSHIP & PERMISSIONS (IMPORTANT)
+  sudo chown -R ubuntu:ubuntu /opt/tomcat
+  sudo chmod -R 755 /opt/tomcat
+
+STEP 9: START TOMCAT
+  /opt/tomcat/bin/startup.sh
+
+Verify:
+  ps -ef | grep tomcat
+
+STEP 10: CREATE START / STOP SHORTCUTS (OPTIONAL)
+  sudo ln -s /opt/tomcat/bin/startup.sh /usr/bin/starttomcat
+  sudo ln -s /opt/tomcat/bin/shutdown.sh /usr/bin/stoptomcat
+
+Usage:
+  starttomcat
+  stoptomcat
+
+STEP 11: CONFIGURE TOMCAT USERS (MANAGER ACCESS)
+  vi /opt/tomcat/conf/tomcat-users.xml
+
+Add before </tomcat-users>:
+  <role rolename="manager-gui"/>
+<role rolename="manager-script"/>
+<role rolename="admin-gui"/>
+
+<user username="noavatech"
+      password="admin123"
+      roles="manager-gui,manager-script,admin-gui"/>
+
+Save and exit.
+
+
+STEP 12: ALLOW REMOTE ACCESS TO MANAGER APPS
+    vi /opt/tomcat/webapps/manager/META-INF/context.xml
+
+Comment out:
+<!--
+<Valve className="org.apache.catalina.valves.RemoteAddrValve"
+       allow="127\.\d+\.\d+\.\d+|::1"/>
+-->
+
+
+Host-manager app
+vi /opt/tomcat/webapps/host-manager/META-INF/context.xml
+
+Apply the same change.
+  Comment out:
+<!--
+<Valve className="org.apache.catalina.valves.RemoteAddrValve"
+       allow="127\.\d+\.\d+\.\d+|::1"/>
+-->
+
+
+STEP 13: CHANGE TOMCAT HTTP PORT (8080 → 8009)
+Note: 8009 is traditionally AJP; here it is reused for HTTP (OK for labs/training).
+    vi /opt/tomcat/conf/server.xml
+Find:
+<Connector port="8080"
+
+Change to:
+<Connector port="8009"
+           protocol="org.apache.coyote.http11.Http11NioProtocol"
+           connectionTimeout="20000"
+           redirectPort="8443" />
+
+save and quit:
+
+
+STEP 14: RESTART TOMCAT
+   stoptomcat
+   starttomcat
+
+STEP 15: AWS SECURITY GROUP
+Open:
+  22 → SSH
+  8009 → Tomcat HTTP   (add tomcat 8009)
+
+
+STEP 16: ACCESS TOMCAT
+Tomcat home:
+   http://<EC2_PUBLIC_IP>:8009
+
+
+Manager app:
+  http://<EC2_PUBLIC_IP>:8009/manager/html
+  Login:
+Username: noavatech
+Password: admin123
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
