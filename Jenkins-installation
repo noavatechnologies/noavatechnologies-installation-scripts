@@ -1,0 +1,160 @@
+JENKINS INSTALLATION & CONFIGURATION
+Ubuntu (AWS EC2 – t2.medium)
+   sudo apt update -y
+   sudo apt upgrade -y
+
+
+STEP 2: INSTALL JAVA 17 (MANDATORY)
+Jenkins requires Java. We standardize on Java 17 (LTS).
+   sudo apt install openjdk-17-jdk -y
+
+
+Verify:
+  java -version
+
+
+STEP 3: ADD JENKINS OFFICIAL REPOSITORY (SECURE METHOD)
+Add Jenkins signing key:
+   curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
+/usr/share/keyrings/jenkins-keyring.asc > /dev/null
+
+
+Add Jenkins repository
+   echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+/etc/apt/sources.list.d/jenkins.list > /dev/null
+
+
+STEP 4: INSTALL JENKINS
+    sudo apt update -y
+    sudo apt install jenkins -y
+
+
+STEP 5: START & ENABLE JENKINS
+    sudo systemctl start jenkins
+    sudo systemctl enable jenkins
+
+
+Check status:
+   sudo systemctl status jenkins
+
+
+You must see:
+Active: active (running)
+
+
+STEP 6: OPEN PORT 8080 IN AWS (CRITICAL)
+In the EC2 Security Group attached to this instance:
+Add an inbound rule:
+Type: Custom TCP
+Port: 8080
+Source: 0.0.0.0/0 (training only)
+
+Save rules.
+
+
+
+STEP 7: ACCESS JENKINS FROM BROWSER
+
+Open in your browser:
+
+http://<EC2_PUBLIC_IP>:8080
+
+
+
+STEP 8: GET INITIAL ADMIN PASSWORD
+On the server, run:
+   sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+Copy the password and paste it into the browse
+
+
+
+STEP 9: COMPLETE JENKINS SETUP
+  In the browser:
+  Click Install suggested plugins
+  Wait for plugin installation
+  Create an Admin User
+  Username: admin (or your choice)
+  Password: strong password
+
+Save and Finish
+
+You will land on the Jenkins Dashboard.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
