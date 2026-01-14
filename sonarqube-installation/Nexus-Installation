@@ -1,0 +1,119 @@
+SONATYPE NEXUS 3 – COMPLETE INSTALLATION STEPS (START → FINISH)
+STEP 1: CREATE EC2 INSTANCE (AWS CONSOLE)
+
+OS: Ubuntu 22.04 LTS
+
+Instance type: t3.large
+
+Storage: 30 GB (minimum)
+
+Security Group
+
+Port 22 – SSH
+
+Port 8081 – Nexus UI
+
+
+STEP 2: CONNECT TO THE SERVER VIA SSH
+        ssh -i key.pem ubuntu@<EC2_PUBLIC_IP>
+        
+STEP 3: CREATE DOCKER INSTALLATION SCRIPT
+Create the script file:
+       vi install-docker.sh
+
+- Copy and Paste the following exactly:
+
+   #!/bin/bash
+set -e
+
+echo "Updating system..."
+sudo apt update -y
+
+echo "Installing prerequisites..."
+sudo apt install -y ca-certificates curl gnupg lsb-release
+
+echo "Adding Docker GPG key..."
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+echo "Adding Docker repository..."
+echo \
+"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+https://download.docker.com/linux/ubuntu \
+$(lsb_release -cs) stable" | \
+sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+echo "Installing Docker Engine..."
+sudo apt update -y
+sudo apt install -y docker-ce docker-ce-cli containerd.io
+
+echo "Enabling Docker service..."
+sudo systemctl enable docker
+sudo systemctl start docker
+
+echo "Docker installation completed."
+docker --version
+
+
+- Save and exit the file.
+
+STEP 4: MAKE SCRIPT EXECUTABLE AND RUN IT
+    chmod +x install-docker.sh
+./install-docker.sh
+
+
+STEP 5: ALLOW UBUNTU USER TO RUN DOCKER
+   sudo usermod -aG docker ubuntu
+newgrp docker
+
+
+STEP 6: CREATE NEXUS DATA DIRECTORY (PERSISTENCE)
+  mkdir -p ~/nexus-data
+sudo chown -R 200:200 ~/nexus-data
+
+STEP 7: RUN NEXUS CONTAINER
+   docker run -d \
+--name nexus \
+-p 8081:8081 \
+-v ~/nexus-data:/nexus-data \
+--restart unless-stopped \
+sonatype/nexus3:latest
+
+
+VERIFY:
+  docker ps
+
+STEP 8: OPEN NEXUS PORT IN AWS
+Ensure port 8081 is open in your EC2 security group.
+
+STEP 9: ACCESS NEXUS UI
+Open browser:
+
+http://<EC2_PUBLIC_IP>:8081
+
+Wait 2–3 minutes for Nexus to fully start.
+
+STEP 10: GET INITIAL ADMIN PASSWORD
+ cat ~/nexus-data/admin.password
+or 
+ docker exec -it nexus cat /nexus-data/admin.password
+
+
+STEP 11: LOGIN TO NEXUS
+
+Username: admin
+
+Password: (from previous step)
+
+Change password when prompted
+
+
+STEP 12: POST-INSTALL RECOMMENDATIONS (IMPORTANT)
+
+Enable or disable anonymous access (based on security needs)
+
+Select Enable and finish.
+
+
+Congratulations
