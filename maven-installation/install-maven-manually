@@ -1,4 +1,4 @@
-HOWTOINSTALL MAVENONUBUNTU-AWS
+HOWTOINSTALL MAVEN ON UBUNTU-AWS
 
 a. Create an ec2 instance
 - First we create a key pair. key pairs allow us to ssh/login into the instance.
