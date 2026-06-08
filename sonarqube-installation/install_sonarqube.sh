@@ -10,40 +10,45 @@ fi
 echo "Updating package index..."
 apt update
 
-echo "Installing OpenJDK 11, unzip, and wget..."
-apt install -y openjdk-11-jdk unzip wget
+echo "Installing OpenJDK 25, unzip, and wget..."
+apt install -y openjdk-25-jdk unzip wget
 
-# Confirm Java 11 is installed
+# Confirm Java 25 is installed
 echo "Java version:"
 java -version
 
 echo "Creating sonar system user..."
-useradd -r -m -d /opt/sonarqube -s /bin/false sonar
+useradd -r -m -d /opt/sonarqube -s /bin/bash sonar || true
 
 # Define variables for SonarQube version and download URL
-SONAR_VERSION="7.8"
+SONAR_VERSION="10.6.0.92116"
 SONAR_TARBALL="sonarqube-$SONAR_VERSION.zip"
 SONAR_URL="https://binaries.sonarsource.com/Distribution/sonarqube/$SONAR_TARBALL"
 
 echo "Downloading SonarQube $SONAR_VERSION..."
 cd /tmp
-wget $SONAR_URL -O $SONAR_TARBALL
+wget -q $SONAR_URL -O $SONAR_TARBALL
 
 echo "Extracting SonarQube..."
-unzip $SONAR_TARBALL
+unzip -q $SONAR_TARBALL
 
 echo "Moving SonarQube to /opt/sonarqube..."
+rm -rf /opt/sonarqube
 mv "sonarqube-$SONAR_VERSION" /opt/sonarqube
 
 echo "Setting ownership of /opt/sonarqube to sonar user..."
 chown -R sonar:sonar /opt/sonarqube
 
+# Explicitly configure Java 25 for SonarQube
+echo "Setting JAVA_HOME for SonarQube..."
+echo "export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64" >> /opt/sonarqube/bin/linux-x86-64/sonar.sh
+echo "export PATH=\$JAVA_HOME/bin:\$PATH" >> /opt/sonarqube/bin/linux-x86-64/sonar.sh
+
 echo "Installation complete!"
 echo "-------------------------"
 echo "Next Steps:"
-echo "1. Switch to the sonar user:             sudo su - sonar"
-echo "2. Go to the SonarQube bin directory:       cd /opt/sonarqube/bin/linux-x86-64"
-echo "3. Start SonarQube:                         sh sonar.sh start"
+echo "1. Start SonarQube as sonar user:   sudo -u sonar /opt/sonarqube/bin/linux-x86-64/sonar.sh start"
+echo "2. Check status:                    sudo -u sonar /opt/sonarqube/bin/linux-x86-64/sonar.sh status"
+echo "3. Access SonarQube:                http://<SERVER-IP>:9000"
 echo "-------------------------"
-echo "Once started, you can access SonarQube via its web interface."
-
+echo "Default login credentials: admin / admin"
