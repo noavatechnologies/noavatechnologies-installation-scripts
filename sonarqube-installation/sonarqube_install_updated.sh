@@ -10,8 +10,8 @@ fi
 echo "Updating package index..."
 apt update
 
-echo "Installing OpenJDK 17, unzip, and wget..."
-apt install -y openjdk-17-jdk unzip wget
+echo "Installing OpenJDK 25, unzip, and wget..."
+apt install -y openjdk-25-jdk unzip wget
 
 echo "Verifying Java installation..."
 java -version
@@ -25,7 +25,7 @@ echo "Creating sonar system user..."
 id sonar &>/dev/null || useradd -r -m -d /opt/sonarqube -s /bin/false sonar
 
 # Define SonarQube variables
-SONAR_VERSION="9.9.3.79811"
+SONAR_VERSION="10.6.0.92116"
 SONAR_TARBALL="sonarqube-$SONAR_VERSION.zip"
 SONAR_URL="https://binaries.sonarsource.com/Distribution/sonarqube/$SONAR_TARBALL"
 
@@ -43,9 +43,9 @@ mv "sonarqube-$SONAR_VERSION" /opt/sonarqube
 echo "Setting ownership..."
 chown -R sonar:sonar /opt/sonarqube
 
-# Explicitly configure Java 17 for SonarQube
+# Explicitly configure Java 25 for SonarQube
 echo "Setting JAVA_HOME for SonarQube..."
-echo "export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" >> /opt/sonarqube/bin/linux-x86-64/sonar.sh
+echo "export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64" >> /opt/sonarqube/bin/linux-x86-64/sonar.sh
 
 # Cleanup
 rm -f /tmp/$SONAR_TARBALL

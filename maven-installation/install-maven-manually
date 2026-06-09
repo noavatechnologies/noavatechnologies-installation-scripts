@@ -1,71 +1,60 @@
-HOWTOINSTALL MAVENONUBUNTU-AWS
+#!/bin/bash
 
-a. Create an ec2 instance
-- First we create a key pair. key pairs allow us to ssh/login into the instance.
-- The keypair is then download to your download folder on your computer
-- Creating the ec2 instance
+# Update system packages
+echo "Updating system packages..."
+sudo apt update -y
 
-b. Connect to the instance and install apache maven
-To connect your aws ec2 instances, you need the following parameters:
-- The keypair: my keypair is prof.pem
-- The server: ubuntu
-- Ip or dns of the server
-- Open an ssh client- most preferably- git bash
-- Server url: ssh-i "prof.pem" ubuntu@ec2-99-79-7-165.ca-central-1.compute.amazonaws.com 
+# Install Java 25 (OpenJDK 25.0.3)
+echo "Installing OpenJDK 25..."
+sudo apt install -y openjdk-25-jdk
 
-c. How to connect to the instance
-- Open git bash
-d. Change directory to Downloads
-- cd  Downloads
-e. Copy and paste the example link from aws cloud 
-- ssh-i "prof.pem" ubuntu@ec2-99-79-7-165.ca-central-1.compute.amazonaws.com 
+# Verify Java installation
+echo "Verifying Java installation..."
+java --version
 
-  Install apache maven
-HOW TO INSTALL MAVEN ON UBUNTU - AWS
+# Change directory to /opt
+echo "Changing directory to /opt..."
+cd /opt
 
-f. Update the system
-- sudo apt update
-g. Install java
-- sudo apt install default-jdk
-h. Verify Java Installation
-- java  --version
-i. Change directory to the opt directory
-- cd  /opt
-j. Download maven 3.9.12 from the apache maven website
-- sudo wget https://dlcdn.apache.org/maven/maven-3/3.9.12/binaries/apache-maven-3.9.12-bin.tar.gz
-k. Extract the Maven package
-- sudo tar xf apache-maven-3.9.12-bin.tar.gz
-l. Rename and create a soft link
-- sudo ln -s /opt/apache-maven-3.9.12 /opt/maven
-m. Remove the Apache Maven tar file
-- sudo rm -rf apache-maven-3.9.12-bin.tar.gz
-n. Perform Maven configuration
-- sudo vi /etc/profile.d/maven.sh
-o. Paste the following lines in maven.sh:
+# Download Apache Maven (latest stable)
+MAVEN_VERSION="3.9.16"
+echo "Downloading Apache Maven version $MAVEN_VERSION..."
+sudo wget https://dlcdn.apache.org/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz
 
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64  # Update this path if it's different
+# Extract the Maven package
+echo "Extracting Apache Maven..."
+sudo tar xf apache-maven-$MAVEN_VERSION-bin.tar.gz
+
+# Rename and create a soft link
+echo "Creating a soft link for Maven..."
+sudo ln -s /opt/apache-maven-$MAVEN_VERSION /opt/maven
+
+# Remove the Apache Maven tar file
+echo "Removing the downloaded tar file..."
+sudo rm -rf apache-maven-$MAVEN_VERSION-bin.tar.gz
+
+# Perform Maven configuration
+echo "Creating Maven environment configuration..."
+sudo bash -c 'cat > /etc/profile.d/maven.sh << EOL
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 export M2_HOME=/opt/maven
 export MAVEN_HOME=/opt/maven
-export PATH=${JAVA_HOME}/bin:${M2_HOME}/bin:${PATH}
+export PATH=\${JAVA_HOME}/bin:\${M2_HOME}/bin:\${PATH}
+EOL'
 
-p. Make the script executable
-- sudo chmod +x /etc/profile.d/maven.sh
-q. Load the environment variables
-- source /etc/profile.d/maven.sh
-r. Verify Maven installation
-- mvn --version
+# Make the script executable
+echo "Making the Maven configuration script executable..."
+sudo chmod +x /etc/profile.d/maven.sh
 
-If you this a result like this below congratulations you have successfully installed and setup maven.
+# Load the environment variables
+echo "Loading environment variables..."
+source /etc/profile.d/maven.sh
 
-Apache Maven 3.9.12 (848fbb4bf2d427b72bdb2471c22fced7ebd9a7a1)
-Maven home: /opt/maven
-Java version: 21.0.9, vendor: Ubuntu, runtime: /usr/lib/jvm/java-21-openjdk-amd64
-Default locale: en, platform encoding: UTF-8
-OS name: "linux", version: "6.14.0-1015-aws", arch: "amd64", family: "unix"
+# Verify Maven installation
+echo "Verifying Maven installation..."
+mvn --version
 
-
-
-
+echo "✅ Maven and Java 25 have been successfully installed and configured!"
 
 
 
