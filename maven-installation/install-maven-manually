@@ -1,12 +1,13 @@
+
 #!/bin/bash
 
 # Update system packages
 echo "Updating system packages..."
 sudo apt update -y
 
-# Install Java 25 (OpenJDK 25.0.3)
-echo "Installing OpenJDK 25..."
-sudo apt install -y openjdk-25-jdk
+# Install Java 21 (OpenJDK 21.0.3)
+echo "Installing OpenJDK 21..."
+sudo apt install -y openjdk-21-jdk
 
 # Verify Java installation
 echo "Verifying Java installation..."
@@ -36,7 +37,7 @@ sudo rm -rf apache-maven-$MAVEN_VERSION-bin.tar.gz
 # Perform Maven configuration
 echo "Creating Maven environment configuration..."
 sudo bash -c 'cat > /etc/profile.d/maven.sh << EOL
-export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export M2_HOME=/opt/maven
 export MAVEN_HOME=/opt/maven
 export PATH=\${JAVA_HOME}/bin:\${M2_HOME}/bin:\${PATH}
@@ -54,20 +55,5 @@ source /etc/profile.d/maven.sh
 echo "Verifying Maven installation..."
 mvn --version
 
-echo "✅ Maven and Java 25 have been successfully installed and configured!"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+echo "✅ Maven and Java 21 have been successfully installed and configured!"
 
