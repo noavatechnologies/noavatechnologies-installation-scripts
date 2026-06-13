@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Update system
+sudo apt-get update -y
+sudo apt-get upgrade -y
+
+# Install Docker if not already installed
+if ! command -v docker &> /dev/null
+then
+    echo "Docker not found. Installing..."
+    sudo apt-get install -y docker.io
+    sudo systemctl start docker
+    sudo systemctl enable docker
+fi
+
+# Install Docker Compose
+if ! command -v docker-compose &> /dev/null
+then
+    echo "Docker Compose not found. Installing..."
+    sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" \
+    -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+fi
+
+# Create SonarQube directory
+mkdir -p ~/sonarqube
+cd ~/sonarqube
+
+# Create docker-compose.yml
+cat <<EOF > docker-compose.yml
+version: "3"
+services:
+  sonarqube:
+    image: sonarqube:latest
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      - SONARQUBE_JDBC_USERNAME=sonar
+      - SONARQUBE_JDBC_PASSWORD=sonar
+      - SONARQUBE_JDBC_URL=jdbc:postgresql://db:5432/sonar
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    container_name: sonarqube_db
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+      - POSTGRES_DB=sonar
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+EOF
+
+# Start SonarQube
+sudo docker-compose up -d
+
+echo "SonarQube is now running on port 9000"
