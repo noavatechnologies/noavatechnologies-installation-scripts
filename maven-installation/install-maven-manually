@@ -20,7 +20,7 @@ cd /opt
 # Download Apache Maven (latest stable)
 MAVEN_VERSION="3.9.16"
 echo "Downloading Apache Maven version $MAVEN_VERSION..."
-sudo wget https://dlcdn.apache.org/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz
+sudo wget https://dlcdn.apache.org/maven/maven-3/3.9.16/binaries/apache-maven-3.9.16-bin.tar.gz
 
 # Extract the Maven package
 echo "Extracting Apache Maven..."
