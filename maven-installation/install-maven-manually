@@ -1,59 +1,78 @@
+#!/usr/bin/env bash
 
-#!/bin/bash
+set -Eeuo pipefail
 
-# Update system packages
+MAVEN_VERSION="3.9.16"
+MAVEN_ARCHIVE="apache-maven-${MAVEN_VERSION}-bin.tar.gz"
+MAVEN_URL="https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/${MAVEN_ARCHIVE}"
+MAVEN_INSTALL_DIR="/opt/apache-maven-${MAVEN_VERSION}"
+MAVEN_LINK="/opt/maven"
+MAVEN_PROFILE="/etc/profile.d/maven.sh"
+
+if [[ "${EUID}" -eq 0 ]]; then
+    SUDO=""
+else
+    SUDO="sudo"
+fi
+
+error_handler() {
+    echo "Error: installation failed on line ${BASH_LINENO[0]}." >&2
+}
+trap error_handler ERR
+
+# Update system packages and install Java.
 echo "Updating system packages..."
-sudo apt update -y
+${SUDO} apt-get update
 
-# Install Java 21 (OpenJDK 21.0.3)
 echo "Installing OpenJDK 21..."
-sudo apt install -y openjdk-21-jdk
+${SUDO} apt-get install --yes openjdk-21-jdk wget
 
-# Verify Java installation
-echo "Verifying Java installation..."
+JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")"
+echo "Using JAVA_HOME=${JAVA_HOME}"
 java --version
 
-# Change directory to /opt
-echo "Changing directory to /opt..."
-cd /opt
+# Download Maven to a temporary file. Do not extract a partial or failed download.
+echo "Downloading Apache Maven ${MAVEN_VERSION}..."
+tmp_archive="$(mktemp --tmpdir "${MAVEN_ARCHIVE}.XXXXXX")"
+trap 'rm -f "${tmp_archive}"' EXIT
 
-# Download Apache Maven (latest stable)
-MAVEN_VERSION="3.9.16"
-echo "Downloading Apache Maven version $MAVEN_VERSION..."
-sudo wget https://dlcdn.apache.org/maven/maven-3/3.9.16/binaries/apache-maven-3.9.16-bin.tar.gz
+if ! wget --https-only --server-response --show-progress --output-document="${tmp_archive}" "${MAVEN_URL}"; then
+    echo "Error: unable to download Maven from ${MAVEN_URL}" >&2
+    exit 1
+fi
 
-# Extract the Maven package
-echo "Extracting Apache Maven..."
-sudo tar xf apache-maven-$MAVEN_VERSION-bin.tar.gz
+if [[ ! -s "${tmp_archive}" ]]; then
+    echo "Error: Maven download is empty." >&2
+    exit 1
+fi
 
-# Rename and create a soft link
-echo "Creating a soft link for Maven..."
-sudo ln -s /opt/apache-maven-$MAVEN_VERSION /opt/maven
+if ! gzip --test "${tmp_archive}"; then
+    echo "Error: downloaded Maven archive is not a valid gzip file." >&2
+    exit 1
+fi
 
-# Remove the Apache Maven tar file
-echo "Removing the downloaded tar file..."
-sudo rm -rf apache-maven-$MAVEN_VERSION-bin.tar.gz
+# Install Maven under /opt and update the stable /opt/maven link.
+echo "Installing Maven in ${MAVEN_INSTALL_DIR}..."
+${SUDO} rm -rf "${MAVEN_INSTALL_DIR}"
+${SUDO} mkdir -p /opt
+${SUDO} tar --extract --gzip --file="${tmp_archive}" --directory=/opt
+${SUDO} ln --symbolic --force "${MAVEN_INSTALL_DIR}" "${MAVEN_LINK}"
 
-# Perform Maven configuration
-echo "Creating Maven environment configuration..."
-sudo bash -c 'cat > /etc/profile.d/maven.sh << EOL
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-export M2_HOME=/opt/maven
-export MAVEN_HOME=/opt/maven
-export PATH=\${JAVA_HOME}/bin:\${M2_HOME}/bin:\${PATH}
-EOL'
+# Configure Maven for login shells.
+echo "Creating ${MAVEN_PROFILE}..."
+${SUDO} tee "${MAVEN_PROFILE}" > /dev/null <<EOF
+export JAVA_HOME=${JAVA_HOME}
+export M2_HOME=${MAVEN_LINK}
+export MAVEN_HOME=${MAVEN_LINK}
+export PATH=\${JAVA_HOME}/bin:\${MAVEN_HOME}/bin:\${PATH}
+EOF
+${SUDO} chmod 0644 "${MAVEN_PROFILE}"
 
-# Make the script executable
-echo "Making the Maven configuration script executable..."
-sudo chmod +x /etc/profile.d/maven.sh
-
-# Load the environment variables
-echo "Loading environment variables..."
-source /etc/profile.d/maven.sh
-
-# Verify Maven installation
+# Apply the configuration in the current shell and verify the installation.
+# shellcheck disable=SC1091
+source "${MAVEN_PROFILE}"
 echo "Verifying Maven installation..."
+command -v mvn
 mvn --version
 
-echo "✅ Maven and Java 21 have been successfully installed and configured!"
-
+echo "Maven ${MAVEN_VERSION} and Java 21 were installed successfully."
