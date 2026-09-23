@@ -1,119 +1,102 @@
-SONATYPE NEXUS 3 – COMPLETE INSTALLATION STEPS (START → FINISH)
-STEP 1: CREATE EC2 INSTANCE (AWS CONSOLE)
+#!/usr/bin/env bash
+set -Eeuo pipefail
+export DEBIAN_FRONTEND=noninteractive
 
-OS: Ubuntu 22.04 LTS
+# Sonatype Nexus 3 installation on Ubuntu 22.04 LTS (AWS EC2)
+# Prerequisites:
+#   - EC2 instance running Ubuntu 22.04 LTS
+#   - Security group allows inbound TCP 22 and 8081
+#   - User has sudo access
 
-Instance type: t3.large
+log() {
+  echo
+  echo "==> $*"
+}
 
-Storage: 30 GB (minimum)
+if ! command -v sudo >/dev/null 2>&1; then
+  echo "sudo is required but not installed. Please install sudo first."
+  exit 1
+fi
 
-Security Group
+CURRENT_USER="${USER:-$(id -un)}"
+NEXUS_DATA_DIR="${HOME}/nexus-data"
+NEXUS_CONTAINER_NAME="nexus"
+NEXUS_PORT="8081"
 
-Port 22 – SSH
+log "Updating system packages"
+sudo apt-get update
+sudo apt-get upgrade -y
 
-Port 8081 – Nexus UI
+log "Installing Docker dependencies"
+sudo apt-get install -y \
+  ca-certificates \
+  curl \
+  gnupg \
+  lsb-release
 
-
-STEP 2: CONNECT TO THE SERVER VIA SSH
-        ssh -i key.pem ubuntu@<EC2_PUBLIC_IP>
-        
-STEP 3: CREATE DOCKER INSTALLATION SCRIPT
-Create the script file:
-       vi install-docker.sh
-
-- Copy and Paste the following exactly:
-
-   #!/bin/bash
-set -e
-
-echo "Updating system..."
-sudo apt update -y
-
-echo "Installing prerequisites..."
-sudo apt install -y ca-certificates curl gnupg lsb-release
-
-echo "Adding Docker GPG key..."
-sudo mkdir -p /etc/apt/keyrings
+log "Adding Docker GPG key"
+sudo install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
-sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
-echo "Adding Docker repository..."
+log "Adding Docker repository"
+ARCH="$(dpkg --print-architecture)"
+CODENAME="$(lsb_release -cs)"
 echo \
-"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-https://download.docker.com/linux/ubuntu \
-$(lsb_release -cs) stable" | \
-sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu ${CODENAME} stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
 
-echo "Installing Docker Engine..."
-sudo apt update -y
-sudo apt install -y docker-ce docker-ce-cli containerd.io
+log "Installing Docker Engine"
+sudo apt-get update
+sudo apt-get install -y \
+  docker-ce \
+  docker-ce-cli \
+  containerd.io
 
-echo "Enabling Docker service..."
+log "Enabling and starting Docker"
 sudo systemctl enable docker
 sudo systemctl start docker
 
-echo "Docker installation completed."
 docker --version
 
+log "Adding ${CURRENT_USER} to the docker group"
+sudo usermod -aG docker "${CURRENT_USER}"
+echo "Please log out and log back in, or run: newgrp docker"
 
-- Save and exit the file.
+log "Creating Nexus persistent data directory"
+mkdir -p "${NEXUS_DATA_DIR}"
+sudo chown -R 200:200 "${NEXUS_DATA_DIR}"
 
-STEP 4: MAKE SCRIPT EXECUTABLE AND RUN IT
-    chmod +x install-docker.sh
-./install-docker.sh
+log "Starting Sonatype Nexus container"
+docker rm -f "${NEXUS_CONTAINER_NAME}" >/dev/null 2>&1 || true
 
+docker run -d \
+  --name "${NEXUS_CONTAINER_NAME}" \
+  -p "${NEXUS_PORT}:8081" \
+  -v "${NEXUS_DATA_DIR}:/nexus-data" \
+  --restart unless-stopped \
+  sonatype/nexus3:latest
 
-STEP 5: ALLOW UBUNTU USER TO RUN DOCKER
-   sudo usermod -aG docker ubuntu
-newgrp docker
+log "Waiting for Nexus to become ready"
+for i in {1..30}; do
+  if curl -fsS "http://localhost:${NEXUS_PORT}/" >/dev/null 2>&1; then
+    echo "Nexus is responding on port ${NEXUS_PORT}"
+    break
+  fi
+  sleep 10
+done
 
+log "Nexus setup instructions"
+echo "1. Open your AWS Security Group and allow inbound TCP 8081"
+echo "2. Browse to: http://<EC2_PUBLIC_IP>:8081"
+echo "3. Get the admin password:"
+echo "   cat ${NEXUS_DATA_DIR}/admin.password"
+echo "   or"
+echo "   docker exec -it ${NEXUS_CONTAINER_NAME} cat /nexus-data/admin.password"
+echo "4. Log in with username: admin"
+echo "5. Change the default password when prompted"
 
-STEP 6: CREATE NEXUS DATA DIRECTORY (PERSISTENCE)
-  mkdir -p ~/nexus-data
-sudo chown -R 200:200 ~/nexus-data
+echo
 
-STEP 7: RUN NEXUS CONTAINER
-   docker run -d \
---name nexus \
--p 8081:8081 \
--v ~/nexus-data:/nexus-data \
---restart unless-stopped \
-sonatype/nexus3:latest
-
-
-VERIFY:
-  docker ps
-
-STEP 8: OPEN NEXUS PORT IN AWS
-Ensure port 8081 is open in your EC2 security group.
-
-STEP 9: ACCESS NEXUS UI
-Open browser:
-
-http://<EC2_PUBLIC_IP>:8081
-
-Wait 2–3 minutes for Nexus to fully start.
-
-STEP 10: GET INITIAL ADMIN PASSWORD
- cat ~/nexus-data/admin.password
-or 
- docker exec -it nexus cat /nexus-data/admin.password
-
-
-STEP 11: LOGIN TO NEXUS
-
-Username: admin
-
-Password: (from previous step)
-
-Change password when prompted
-
-
-STEP 12: POST-INSTALL RECOMMENDATIONS (IMPORTANT)
-
-Enable or disable anonymous access (based on security needs)
-
-Select Enable and finish.
-
-
-Congratulations
+echo "Installation complete."
