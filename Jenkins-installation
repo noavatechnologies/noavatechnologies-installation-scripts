@@ -1,141 +1,117 @@
-JENKINS INSTALLATION & CONFIGURATION
-Ubuntu (AWS EC2 – t2.medium)
-   sudo apt update -y
-   sudo apt upgrade -y
+# JENKINS INSTALLATION & CONFIGURATION
+**Ubuntu on AWS EC2 – t2.medium**
 
+## STEP 1: UPDATE UBUNTU
 
-STEP 2: INSTALL JAVA 17 (MANDATORY)
-Jenkins requires Java. We standardize on Java 17 (LTS).
-   sudo apt install openjdk-17-jdk -y
+```bash
+sudo apt update -y
+sudo apt upgrade -y
+```
 
+## STEP 2: INSTALL JAVA 21 (LTS)
 
-Verify:
-  java -version
+Jenkins requires a supported Java runtime. We will use Java 21.
 
+```bash
+sudo apt install fontconfig openjdk-21-jre -y
+```
 
-STEP 3: ADD JENKINS OFFICIAL REPOSITORY (SECURE METHOD)
-Add Jenkins signing key:
-   curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
-/usr/share/keyrings/jenkins-keyring.asc > /dev/null
+Verify the installation:
 
+```bash
+java -version
+```
 
-Add Jenkins repository
-   echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
-https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
-/etc/apt/sources.list.d/jenkins.list > /dev/null
+## STEP 3: ADD THE OFFICIAL JENKINS LTS REPOSITORY
 
+### Add the Jenkins signing key
 
-STEP 4: INSTALL JENKINS
-    sudo apt update -y
-    sudo apt install jenkins -y
+```bash
+sudo mkdir -p /etc/apt/keyrings
 
+sudo wget -O /etc/apt/keyrings/jenkins-keyring.asc \
+https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+```
 
-STEP 5: START & ENABLE JENKINS
-    sudo systemctl start jenkins
-    sudo systemctl enable jenkins
+### Add the Jenkins repository
 
+```bash
+echo "deb [signed-by=/etc/apt/keyrings/jenkins-keyring.asc]" \
+https://pkg.jenkins.io/debian-stable binary/ | \
+sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+```
 
-Check status:
-   sudo systemctl status jenkins
+## STEP 4: INSTALL JENKINS
 
+```bash
+sudo apt update -y
+sudo apt install jenkins -y
+```
 
-You must see:
+## STEP 5: START AND ENABLE JENKINS
+
+```bash
+sudo systemctl enable --now jenkins
+```
+
+Check the service status:
+
+```bash
+sudo systemctl status jenkins
+```
+
+Confirm that the service displays:
+
+```text
 Active: active (running)
+```
 
+Press `q` to exit the status screen.
 
-STEP 6: OPEN PORT 8080 IN AWS (CRITICAL)
-In the EC2 Security Group attached to this instance:
-Add an inbound rule:
-Type: Custom TCP
-Port: 8080
-Source: 0.0.0.0/0 (training only)
+## STEP 6: OPEN PORT 8080 IN AWS
 
-Save rules.
+In the EC2 Security Group attached to your instance, configure an inbound rule:
 
+- **Type:** Custom TCP
+- **Port:** 8080
+- **Source:** Configure according to your training access requirements.
 
+Save the rule.
 
-STEP 7: ACCESS JENKINS FROM BROWSER
+## STEP 7: ACCESS JENKINS FROM YOUR BROWSER
 
-Open in your browser:
+Open:
 
+```text
 http://<EC2_PUBLIC_IP>:8080
+```
 
+Replace `<EC2_PUBLIC_IP>` with your instance's public IPv4 address.
 
+## STEP 8: GET THE INITIAL ADMIN PASSWORD
 
-STEP 8: GET INITIAL ADMIN PASSWORD
-On the server, run:
-   sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+On the EC2 instance, run:
 
-Copy the password and paste it into the browse
+```bash
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+```
 
+Copy the password and paste it into the Jenkins setup page.
 
+## STEP 9: COMPLETE JENKINS SETUP
 
-STEP 9: COMPLETE JENKINS SETUP
-  In the browser:
-  Click Install suggested plugins
-  Wait for plugin installation
-  Create an Admin User
-  Username: admin (or your choice)
-  Password: strong password
+1. Click **Install suggested plugins**.
+2. Wait for the plugins to finish installing.
+3. Create your administrator account.
+4. Choose a strong password.
+5. Save and finish the setup.
 
-Save and Finish
+You should now see the Jenkins Dashboard.
 
-You will land on the Jenkins Dashboard.
+## OFFICIAL DOCUMENTATION
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- Jenkins Linux installation: https://www.jenkins.io/doc/book/installing/linux/
+- Jenkins Java support policy: https://www.jenkins.io/doc/book/platform-information/support-policy-java/
 
 
 
