@@ -115,6 +115,18 @@ You should now see the Jenkins Dashboard.
 
 
 
+AFTER INSTALLATION
+------------------
+
+Complete the browser setup
+Once the script reports success:
+1. Configure your EC2 Security Group to permit access to port 8080 according to your access policy.
+2. Visit http://<EC2_PUBLIC_IP>:8080.
+3. If needed, retrieve the password with:
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+
+
 
 
 
