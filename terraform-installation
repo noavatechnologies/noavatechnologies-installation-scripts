@@ -1,0 +1,26 @@
+install chocolatey
+------------------
+
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+check chocolatey version
+----------------------
+choco --version
+
+install terraform
+-----------------
+choco install terraform -y
+
+check terraform version
+----------------------
+terraform -version
+
+upgrade terraform
+-----------------   
+
+choco upgrade terraform -y
+
+check terraform version
+----------------------  
+terraform -version
+Terraform v1.17.0
